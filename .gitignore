@@ -1,0 +1,4 @@
+*
+!.gitignore
+!lab_5.srcs/*
+!lab_5.runs/impl_1/Top.bit
