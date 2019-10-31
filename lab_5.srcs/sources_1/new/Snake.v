@@ -1,10 +1,11 @@
-module Snake(Key, CLK, FrameClk, Xpos, Ypos, drawSnake);
-input CLK, FrameClk;
+module Snake(Key, btns, CLK, frameClk, Xpos, Ypos, drawSnake);
+input CLK, frameClk;
 input[7:0] Key;
 input[9:0] Xpos, Ypos;
+input[4:0] btns;
 output drawSnake;
 wire Pause, Start, Esc, L, R, U, D;
-reg drawSnake;
+reg drawSnake, draw;
 reg ded, GameOn, paused;
 reg[1:0] dir;   //00 up, 01 right, 11 down, 10 left
 reg[9:0] SnakeX[127:0];
@@ -12,11 +13,13 @@ reg[8:0] SnakeY[127:0];
 reg[6:0] len;
 reg[7:0] i, j;
 
-KeyDecode kd(Key, Pause, Start, Esc, L, R, U, D);
+KeyDecode kd(Key, btns, Pause, Start, Esc, L, R, U, D);
 
 initial begin
     j <= 0;
     GameOn <= 0;
+    draw <= 0;
+    drawSnake <= 0;
     len <= 5;
     ded <= 0;
     dir <= 2'b01;
@@ -33,7 +36,7 @@ initial begin
 end
 
 //Move Snake and control game
-always@(posedge FrameClk) begin
+always@(posedge frameClk) begin
     //Read control inputs
     if(Pause) begin
         paused = 1;
@@ -139,18 +142,19 @@ always@(posedge FrameClk) begin
 end
 
 //Determine pixel to draw
-always@(posedge CLK) begin
-    drawSnake = 0;
+always@(negedge CLK) begin
+    draw = 0;
     for(j = 0; j <= 127; j = j + 1) begin
         if(j < len) begin
-            if(SnakeX[j] >= Xpos && SnakeX[j] + 10 < Xpos
-                && SnakeY[j] >= Ypos && SnakeY[j] + 10 < Ypos)
+            if(SnakeX[j] <= Xpos && SnakeX[j] + 10 > Xpos
+                && SnakeY[j] <= Ypos && SnakeY[j] + 10 > Ypos)
             begin
-                drawSnake = 1;
+                draw = 1;
             end
             else begin end
         end
         else begin end
     end
+    drawSnake = draw;
 end
 endmodule

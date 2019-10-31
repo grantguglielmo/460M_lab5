@@ -17,6 +17,7 @@
 `define WHITE           8'h40
 
 module vgaController(
+    CLK,
     pixelClk,
     pixel_color,
     drawSnake,
@@ -29,14 +30,17 @@ module vgaController(
     vcount
     );
     
-    input               pixelClk, drawSnake;
+    input               CLK, pixelClk, drawSnake;
     input [7:0]         pixel_color;
     output reg   [9:0]  hcount,
                         vcount;
     reg			        visible;
     output reg          hsync,
                         vsync;
-    output reg [3:0]    R,
+//    output reg [3:0]    Ro,
+//                        Go,
+//                        Bo;
+    output reg [3:0]           R,
                         G,
                         B;
     
@@ -46,33 +50,37 @@ module vgaController(
         visible <= 1;
     end
     
+//    DFF ffR(.D(R), .CLK(CLK), .Q(Ro), .QN());
+//    DFF ffG(.D(G), .CLK(CLK), .Q(Go), .QN());
+//    DFF ffB(.D(B), .CLK(CLK), .Q(Bo), .QN());
+    
     always @(posedge pixelClk) begin
+        if ((hcount < 640) && (vcount < 480)) begin
+            visible <= 1;
+        end
+        else begin
+            visible <= 0;
+        end
+        
         if (hcount < `MAX_HCOUNT) begin
             if ((hcount < `HSYNC_LOW_BEGIN) || (hcount > `HSYNC_LOW_END)) begin
                 hsync <= 1;
-                
-                if ((hcount < 640) && (vcount < 480)) begin
-                    visible <= 1;
-                end
-                else begin
-                    visible <= 0;
-                end
             end
             else begin
                 hsync <= 0;
-            end
-
-	    if ((vcount < `VSYNC_LOW_BEGIN) || (vcount > `VSYNC_LOW_END)) begin
-                vsync <= 1;
-            end
-            else begin
-            	vsync <= 0;
             end
             
             hcount <= hcount + 1;
         end
         else begin
             hcount <= 0;
+            
+            if ((vcount < `VSYNC_LOW_BEGIN) || (vcount > `VSYNC_LOW_END)) begin
+                vsync <= 1;
+            end
+            else begin
+            	vsync <= 0;
+            end
             
             if (vcount <  `MAX_VCOUNT) begin
                 vcount <= vcount + 1;
@@ -99,9 +107,9 @@ module vgaController(
                 // Determines what color to output to the screen
                 case(pixel_color)
                     `BLACK: begin
-                        R <= 4'h0;
-                        G <= 4'h0;
-                        B <= 4'h0;
+                        R <= 4'hF;
+                        G <= 4'hF;
+                        B <= 4'hF;
                     end
                     `BLUE: begin
                         R <= 4'h0;
