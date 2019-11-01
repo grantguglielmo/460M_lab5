@@ -1,18 +1,23 @@
-module Snake(Key, btns, CLK, frameClk, Xpos, Ypos, drawSnake);
+module Snake(Key, btns, CLK, frameClk, Xpos, Ypos, drawSnake, drawFood);
 input CLK, frameClk;
 input[7:0] Key;
 input[9:0] Xpos, Ypos;
 input[4:0] btns;
 output drawSnake;
+output drawFood;
 wire Pause, Start, Esc, L, R, U, D;
-reg drawSnake, draw;
+reg drawSnake, draw, drawFood;
 reg ded, GameOn, paused;
+reg eaten;
+wire[9:0] foodX;
+wire[8:0] foodY;
 reg[1:0] dir;   //00 up, 01 right, 11 down, 10 left
 reg[9:0] SnakeX[127:0];
 reg[8:0] SnakeY[127:0];
 reg[6:0] len;
-reg[7:0] i, j;
+reg[7:0] i, j, k;
 
+Food food(frameClk, CLK, eaten, foodX, foodY);
 KeyDecode kd(Key, btns, Pause, Start, Esc, L, R, U, D);
 
 initial begin
@@ -101,17 +106,28 @@ always@(posedge frameClk) begin
         
         //Move snake in direction
         case(dir)
-            2'b00: SnakeY[0] <= SnakeY[0] - 10;  //Up
-            2'b01: SnakeX[0] <= SnakeX[0] + 10;  //Right
-            2'b10: SnakeX[0] <= SnakeX[0] - 10;  //Left
-            2'b11: SnakeY[0] <= SnakeY[0] + 10;  //Down
+            2'b00: SnakeY[0] = SnakeY[0] - 10;  //Up
+            2'b01: SnakeX[0] = SnakeX[0] + 10;  //Right
+            2'b10: SnakeX[0] = SnakeX[0] - 10;  //Left
+            2'b11: SnakeY[0] = SnakeY[0] + 10;  //Down
         endcase
+        
+        //eat self
+        for(k = 1; k <= 127; k = k + 1) begin
+            if(k < len) begin
+                if((SnakeY[0] == SnakeY[k])
+                    && (SnakeX[0] == SnakeX[k]))
+                begin
+                    ded = 1;
+                end
+            end
+        end
         
         //See if run into wall
         if(((SnakeY[0] == 0) && (dir == 2'b00)) 
             || ((SnakeX[0] == 0) && (dir == 2'b10)) 
-            || ((SnakeX[0] == 640) && (dir == 2'b01)) 
-            || ((SnakeY[0] == 480) && (dir == 2'b11))) 
+            || ((SnakeX[0] == 630) && (dir == 2'b01)) 
+            || ((SnakeY[0] == 470) && (dir == 2'b11))) 
         begin
             ded = 1;
         end
@@ -156,5 +172,13 @@ always@(negedge CLK) begin
         else begin end
     end
     drawSnake = draw;
+    if(foodX <= Xpos && foodX + 10 > Xpos
+        && foodY <= Ypos && foodY + 10 > Ypos)
+    begin
+        drawFood = 1;
+    end
+    else begin
+        drawFood = 0;
+    end
 end
 endmodule

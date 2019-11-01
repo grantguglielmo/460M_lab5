@@ -21,6 +21,7 @@ module vgaController(
     pixelClk,
     pixel_color,
     drawSnake,
+    drawFood,
     hsync,
     vsync,
     R,
@@ -30,7 +31,7 @@ module vgaController(
     vcount
     );
     
-    input               CLK, pixelClk, drawSnake;
+    input               CLK, pixelClk, drawSnake, drawFood;
     input [7:0]         pixel_color;
     output reg   [9:0]  hcount,
                         vcount;
@@ -102,6 +103,11 @@ module vgaController(
                     G <= 4'h0;
                     B <= 4'hF;
                 end
+            end
+            else if(drawFood) begin
+                R <= 4'h0;
+                G <= 4'hF;
+                B <= 4'h0;
             end
             else begin
                 // Determines what color to output to the screen
